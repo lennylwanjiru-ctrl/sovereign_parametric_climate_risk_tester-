@@ -1,7 +1,7 @@
 
-Project: Sovereign Parametric Climate Risk Tester
+"""
 Module: Asset-Liability Stochastic Simulation & Sovereign Solvency Modeling
-Analyst: Lenny Wanjiru (DeKUT Actuarial Science)
+"""
 
 
 import os
