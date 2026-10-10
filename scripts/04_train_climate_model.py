@@ -1,7 +1,7 @@
+"""
 
-Project: Sovereign Parametric Climate Risk Tester
 Module: Climate Risk Machine Learning Calibration & Feature Importance Analytics
-Analyst: Lenny Wanjiru (DeKUT Actuarial Science)
+"""
 
 
 import os
