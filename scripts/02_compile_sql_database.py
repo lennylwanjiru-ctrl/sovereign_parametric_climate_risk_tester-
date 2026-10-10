@@ -1,7 +1,7 @@
 
-Project: Sovereign Parametric Climate Risk Tester
+"""
 Module: Relational Database Compiling & Cross-Schema Structural Auditing
-Analyst: Lenny Wanjiru (DeKUT Actuarial Science)
+"""
 
 import os
 import sqlite3
