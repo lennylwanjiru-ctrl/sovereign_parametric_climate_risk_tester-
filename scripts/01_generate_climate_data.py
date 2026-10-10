@@ -1,8 +1,8 @@
-
+""""
 Project: Sovereign Parametric Climate Risk Tester
 Module: Climate Mesh Data Pipeline Simulation & Actuarial Statistics Core
 Analyst: Lenny Wanjiru (DeKUT Actuarial Science)
-
+"""
 
 import os
 import logging
