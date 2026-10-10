@@ -1,49 +1,96 @@
+
+
+Module: Model Reliability Validation & Stratified 5-Fold Cross-Validation Audit
+
+
+
 import os
-import pandas as pd
+import logging
 import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 
-print("\n Initializing Phase 4B: Running Actuarial Model Reliability & Cross-Validation Test...")
+# Configure enterprise logger interface for execution tracking
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# 1. Ingest your data
-if not os.path.exists('data/regional_climate_mesh.csv'):
-    print(" Error: Baseline data not found! Run script 01 first.")
-    exit()
+# Define input path boundaries
+mesh_csv_path = 'data/regional_climate_mesh.csv'
 
-df = pd.read_csv('data/regional_climate_mesh.csv')
+# 1. Environment Workspace Safeguard Check
+if not os.path.exists(mesh_csv_path):
+    logging.error(f"Execution Aborted: Base data registry missing at destination path: {mesh_csv_path}")
+    raise FileNotFoundError("Please ensure regional_climate_mesh.csv is generated inside the /data directory first.")
+
+# Ingest historical observational matrices into memory
+df = pd.read_csv(mesh_csv_path)
+
+
+# STRATIFIED CROSS-VALIDATION FRAMEWORK ARCHITECTURE
+
+logging.info("Isolating data dimensions and configuring cross-validation parameters...")
+
+# Features (X) and Target Label (y) definitions
 X = df[['rainfall_mm', 'satellite_ndvi_score']]
 y = df['is_stress_year']
 
-# 2. Configure a Stratified 5-Fold Cross-Validation structure
-# 'Stratified' ensures each fold has the exact same percentage of drought years as the whole dataset
+# Configure a Stratified 5-Fold Cross-Validation structure to neutralize sampling bias
 cv_structure = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-# 3. Instantiate a fresh model to prevent pre-learned bias leakage
+# Instantiation of baseline model parameters to verify pipeline out-of-sample power
 test_model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
 
-# 4. Compute reliability scores across all 5 folds
-print(" Spinning up cross-validation matrix iterations...")
+logging.info("Executing parallel Stratified 5-Fold Cross-Validation matrix iterations...")
+
+# Compute out-of-sample reliability scoring matrices across all 5 folds
 cv_scores = cross_val_score(test_model, X, y, cv=cv_structure, scoring='accuracy')
 
-# 5. Output reliability metrics
-print("\n--- [Machine Learning Reliability & Stability Report] ---")
-for idx, score in enumerate(cv_scores):
-    print(f"   Fold {idx+1} Verification Accuracy:   {score*100:.2f}%")
-
+# Calculate mean performance metrics and score variances
 mean_accuracy = np.mean(cv_scores)
 score_variance_sd = np.std(cv_scores)
 
-print(f"\n Mean Cross-Validation Accuracy: {mean_accuracy*100:.2f}%")
-print(f" Model Score Volatility (Std Dev): {score_variance_sd*100:.2f}%")
 
-print("\n--- [Actuarial Underwriting Audit Verdict] ---")
-if score_variance_sd > 0.05:
-    print("Verdict: UNRELIABLE / UNSTABLE MODEL. High variance detected across folds.")
-    print("         The predictive parameters are overfitted to local noise.")
-elif mean_accuracy < 0.85:
-    print("Verdict: UNDERFITTED MODEL. Accuracy baseline falls short of systemic underwriting margins.")
+# ACTUARIAL AUDITING LOGIC & SOLVENCY RELIABILITY ANALYSIS
+
+logging.info("Compiling model stability parameters against underwriting variance thresholds...")
+
+# Establish standard engineering bounds for model deployment
+VARIANCE_HURDLE = 0.05
+ACCURACY_THRESHOLD = 0.85
+
+if score_variance_sd > VARIANCE_HURDLE:
+    audit_status_id = "UNSTABLE_HIGH_VARIANCE"
+elif mean_accuracy < ACCURACY_THRESHOLD:
+    audit_status_id = "UNDERFITTED_LOW_ACCURACY"
 else:
-    print("Verdict: HIGHLY RELIABLE ENGINE. Low variance and strong accuracy confirmed.")
-    print("         The Random Forest parameters are statistically stable for live risk forecasting.")
-print("")
+    audit_status_id = "STABLE_HIGH_RELIABILITY"
+
+# Save calculated cross-validation telemetry arrays back to data storage logs
+os.makedirs('data', exist_ok=True)
+output_cv_summary = pd.DataFrame([
+    {'fold_id': f"FOLD_{idx+1}", 'accuracy_score': round(score, 4)} for idx, score in enumerate(cv_scores)
+] + [
+    {'fold_id': 'CV_MEAN_ACCURACY', 'accuracy_score': round(mean_accuracy, 4)},
+    {'fold_id': 'CV_VARIANCE_SD', 'accuracy_score': round(score_variance_sd, 4)}
+])
+
+output_csv_path = 'data/cross_validation_reliability_table.csv'
+output_cv_summary.to_csv(output_csv_path, index=False)
+logging.info(f"Model validation records successfully written to target destination: {output_csv_path}")
+
+
+# FINANCIAL TELEMETRY AUDIT REPORT
+# =
+print("\n" + "="*80)
+print("ACTUARIAL MODEL STABILITY BRIEF: CROSS-VALIDATION TELEMETRY AUDIT")
+print("="*80)
+print("Stratified Validation Run Trace Log:")
+for idx, score in enumerate(cv_scores):
+    print(f" -> Cross-Validation Iteration [Fold {idx+1}]: Validation Accuracy = {score:.2%}")
+print("-"*80)
+print("Aggregated Portfolio Performance Diagnostics:")
+print(f" -> Mean Cross-Validation Classification Accuracy: {mean_accuracy:.2%}")
+print(f" -> Model Classifier Score Volatility (Std Dev):   {score_variance_sd:.2%}")
+print("-"*80)
+print(f"System Underwriting Audit Classification Code: {audit_status_id}")
+print("="*80 + "\n")
